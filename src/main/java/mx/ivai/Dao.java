@@ -564,9 +564,10 @@ public class Dao {
         Connection conn = null;
         ResultSet rs = null;
         String msj = "";
-        Integer cupo = 0;
+        Integer cupoAux = 0;
         Integer restantes = 0;
         Integer diferencia = 0;
+        Integer cont = 0;
 
         conn = c.getConnection();
 
@@ -576,18 +577,32 @@ public class Dao {
             stm.setInt(1, curso.getIdCurso());
             rs = stm.executeQuery();
             while (rs.next()) {
-                cupo = rs.getInt("Cupo");
+                cupoAux = rs.getInt("Cupo");
                 restantes = rs.getInt("EstatusCupo");
             }
-            diferencia = cupo - restantes;
+            diferencia = cupoAux - restantes;
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+
+        try {
+            String query = "SELECT Nombre FROM Registro WHERE IdCurso = ?";
+            stm = conn.prepareStatement(query);
+            stm.setInt(1, curso.getIdCurso());
+            rs = stm.executeQuery();
+            while (rs.next()) {
+                cont = cont += 1;
+            }
         } catch (Exception e){
             System.out.println(e.getMessage());
         }
 
         try {
             Integer cupoFinal = curso.getCupo() - diferencia;
+            Integer cupo = curso.getCupo();
             if(cupoFinal < 0){
                 cupoFinal = 0;
+                cupo = cont;
             }
             
             String sql = "UPDATE Curso SET NombreCurso = ?, Fecha = ?, Hora = ?, Imparte = ?, Cupo = ?, EstatusCupo = ?, EstatusCurso = ?, "
@@ -600,7 +615,7 @@ public class Dao {
             stm.setString(2, curso.getFecha());
             stm.setString(3, curso.getHora());
             stm.setString(4, curso.getImparte());
-            stm.setInt(5, curso.getCupo());
+            stm.setInt(5, cupo);
             stm.setInt(6, cupoFinal);
             stm.setString(7, curso.getEstatusCurso());
             stm.setString(8, curso.getModalidad());
@@ -637,7 +652,6 @@ public class Dao {
                 System.out.println(e);
             }
         }
-        System.out.println("Datos recibidos: " + curso);
         return msj;
     }
 
@@ -774,7 +788,6 @@ public class Dao {
                 System.out.println(e);
             }
         }
-        System.out.println("Datos recibidos: " + registro);
         return msj;
     }
 
@@ -818,7 +831,6 @@ public class Dao {
                 System.out.println(e);
             }
         }
-        System.out.println("Datos recibidos: " + tipoCurso);
         return msj;
     }
 

@@ -477,15 +477,15 @@ public class Dao {
         PreparedStatement stm = null;
         Connection conn = null;
         String msj = "";
-    
+
         conn = c.getConnection();
-    
+
         try {
             String sql = "INSERT INTO Curso (NombreCurso, Fecha, Hora, Imparte, Cupo, EstatusCupo, EstatusCurso, Modalidad, Direccion, CorreoSeguimiento, Tipo, Curso, LigaTeams, ValorCurricular, Constancia) "
-                       + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'cursos.ivai@gmail.com', ?, ?, ?, ?, ?)";
-    
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'cursos.ivai@gmail.com', ?, ?, ?, ?, ?)";
+
             stm = conn.prepareStatement(sql);
-    
+
             stm.setString(1, curso.getNombreCurso());
             stm.setString(2, curso.getFecha());
             stm.setString(3, curso.getHora());
@@ -499,28 +499,29 @@ public class Dao {
             stm.setString(11, curso.getCurso());
             stm.setString(12, curso.getLigaTeams());
             stm.setString(13, curso.getValorCurricular());
-            
+
             stm.setBytes(14, curso.getConstancia());
-    
+
             if (stm.executeUpdate() > 0)
                 msj = "Curso registrado";
             else
                 msj = "Error al registrar el curso";
-    
+
         } catch (Exception e) {
             System.out.println(e);
             msj = "Error: " + e.getMessage();
         } finally {
             try {
-                if (stm != null) stm.close();
-                if (conn != null) conn.close();
+                if (stm != null)
+                    stm.close();
+                if (conn != null)
+                    conn.close();
             } catch (Exception e) {
                 System.out.println(e);
             }
         }
         return msj;
     }
-    
 
     // Método que retorna todos los estados
     public static List<String> obtenerEstados() {
@@ -562,7 +563,6 @@ public class Dao {
     public static String editarCurso(Cursos curso) {
         PreparedStatement stm = null;
         Connection conn = null;
-        ResultSet rs = null;
         String msj = "";
         Integer cupoAux = 0;
         Integer restantes = 0;
@@ -572,39 +572,45 @@ public class Dao {
         conn = c.getConnection();
 
         try {
+            PreparedStatement ps = null;
+            ResultSet rs = null;
             String query = "SELECT Cupo, EstatusCupo FROM Curso WHERE idCurso = ?";
-            stm = conn.prepareStatement(query);
-            stm.setInt(1, curso.getIdCurso());
-            rs = stm.executeQuery();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, curso.getIdCurso());
+            rs = ps.executeQuery();
             while (rs.next()) {
                 cupoAux = rs.getInt("Cupo");
                 restantes = rs.getInt("EstatusCupo");
             }
             diferencia = cupoAux - restantes;
-        } catch (Exception e){
+            ps.close();
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
 
         try {
+            PreparedStatement ps = null;
+            ResultSet rs = null;
             String query = "SELECT Nombre FROM Registro WHERE IdCurso = ?";
-            stm = conn.prepareStatement(query);
-            stm.setInt(1, curso.getIdCurso());
-            rs = stm.executeQuery();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, curso.getIdCurso());
+            rs = ps.executeQuery();
             while (rs.next()) {
                 cont = cont += 1;
             }
-        } catch (Exception e){
+            ps.close();
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
 
         try {
             Integer cupoFinal = curso.getCupo() - diferencia;
             Integer cupo = curso.getCupo();
-            if(cupoFinal < 0){
+            if (cupoFinal < 0) {
                 cupoFinal = 0;
                 cupo = cont;
             }
-            
+
             String sql = "UPDATE Curso SET NombreCurso = ?, Fecha = ?, Hora = ?, Imparte = ?, Cupo = ?, EstatusCupo = ?, EstatusCurso = ?, "
                     + " Modalidad = ?, Direccion = ?, CorreoSeguimiento = ?, Tipo = ?, Curso = ?, LigaTeams = ?, ValorCurricular = ?"
                     + "WHERE IdCurso = ?";
@@ -659,22 +665,22 @@ public class Dao {
         PreparedStatement stm = null;
         Connection conn = null;
         String msj = "";
-    
+
         try {
             conn = c.getConnection();
-    
+
             String sql = "DELETE FROM Registro WHERE IdRegistro = ?";
-    
+
             stm = conn.prepareStatement(sql);
-            stm.setInt(1, registro.getIdRegistro()); 
-    
+            stm.setInt(1, registro.getIdRegistro());
+
             if (stm.executeUpdate() > 0) {
                 msj = "Registro eliminado con éxito";
                 aumentarCupo(registro.getIdCurso());
             } else {
                 msj = "No se encontró el registro con IdRegistro: " + registro.getIdRegistro();
             }
-    
+
         } catch (Exception e) {
             System.out.println(e);
             msj = "Error: " + e.getMessage();
@@ -694,7 +700,7 @@ public class Dao {
                 System.out.println(e);
             }
         }
-    
+
         return msj;
     }
 
@@ -752,23 +758,23 @@ public class Dao {
         PreparedStatement stm = null;
         Connection conn = null;
         String msj = "";
-    
+
         conn = c.getConnection();
-    
+
         try {
             String sql = "UPDATE Registro SET Asistencia = ? WHERE idRegistro = ?";
-    
+
             stm = conn.prepareStatement(sql);
-    
-            stm.setString(1, registro.getAsistencia()); 
+
+            stm.setString(1, registro.getAsistencia());
             stm.setInt(2, registro.getIdRegistro());
-    
+
             if (stm.executeUpdate() > 0) {
                 msj = "Registro actualizado con éxito";
             } else {
                 msj = "No se pudo actualizar el registro";
             }
-    
+
         } catch (Exception e) {
             System.out.println(e);
             msj = "Error: " + e.getMessage();
@@ -795,23 +801,23 @@ public class Dao {
         PreparedStatement stm = null;
         Connection conn = null;
         String msj = "";
-    
+
         conn = c.getConnection();
-    
+
         try {
             String sql = "UPDATE TIPOCURSO SET Tipo = ? WHERE Id = ?";
-    
+
             stm = conn.prepareStatement(sql);
-    
-            stm.setString(1, tipoCurso.getTipo()); 
+
+            stm.setString(1, tipoCurso.getTipo());
             stm.setInt(2, tipoCurso.getId());
-    
+
             if (stm.executeUpdate() > 0) {
                 msj = "Tipo de curso actualizado con éxito";
             } else {
                 msj = "No se pudo actualizar el tipo de curso";
             }
-    
+
         } catch (Exception e) {
             System.out.println(e);
             msj = "Error: " + e.getMessage();
@@ -838,21 +844,21 @@ public class Dao {
         PreparedStatement stm = null;
         Connection conn = null;
         String msj = "";
-    
+
         try {
             conn = c.getConnection();
-    
+
             String sql = "DELETE FROM TIPOCURSO WHERE Id = ?";
-    
+
             stm = conn.prepareStatement(sql);
-            stm.setInt(1, tipoCurso.getId()); 
-    
+            stm.setInt(1, tipoCurso.getId());
+
             if (stm.executeUpdate() > 0) {
                 msj = "Tipo curso eliminado con exito";
             } else {
                 msj = "Error al eliminar el tipo de curso";
             }
-    
+
         } catch (Exception e) {
             System.out.println(e);
             msj = "Error: " + e.getMessage();
@@ -874,7 +880,7 @@ public class Dao {
         }
         return msj;
     }
-    
+
     public static String registrarTipoCurso(String nombreTipoCurso) {
         PreparedStatement stm = null;
         Connection conn = null;
@@ -916,57 +922,58 @@ public class Dao {
             }
         }
         return msj;
-    }    
-    
+    }
 
     public static List<String> obtenerAsistentes(Integer idCurso) {
         List<String> nombreAsistentes = new ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
-    
+
         try {
             conn = c.getConnection();
             String query = "SELECT CONCAT(Nombre, ' ', Apellidos) as Nombre, FROM Registro WHERE Asistencia = 'true' AND IdCurso = ?";
             ps = conn.prepareStatement(query);
-            ps.setInt(1, idCurso);  // Corregido el índice del parámetro
+            ps.setInt(1, idCurso); // Corregido el índice del parámetro
             rs = ps.executeQuery();
-    
+
             while (rs.next()) {
                 nombreAsistentes.add(rs.getString("Nombre"));
             }
-    
+
         } catch (Exception ex) {
             System.out.println("Error al obtener los nombres de los asistentes: " + ex.getMessage());
             ex.printStackTrace();
-    
+
         } finally {
             try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (conn != null) conn.close();
+                if (rs != null)
+                    rs.close();
+                if (ps != null)
+                    ps.close();
+                if (conn != null)
+                    conn.close();
             } catch (Exception e) {
                 System.out.println(e);
             }
         }
-    
+
         return nombreAsistentes;
     }
 
-
-     public static List<Registro> obtenerRegistrosAsistentes(Integer idCurso) {
+    public static List<Registro> obtenerRegistrosAsistentes(Integer idCurso) {
         List<Registro> registros = new ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
-        
+
         try {
             conn = Conexion.getConnection();
             String query = "SELECT * FROM Registro WHERE Asistencia = 'true' AND IdCurso = ?";
             ps = conn.prepareStatement(query);
             ps.setInt(1, idCurso);
             rs = ps.executeQuery();
-            
+
             while (rs.next()) {
                 Registro registro = new Registro();
                 registro.setNombre(rs.getString("Nombre"));
@@ -980,9 +987,12 @@ public class Dao {
             ex.printStackTrace();
         } finally {
             try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (conn != null) conn.close();
+                if (rs != null)
+                    rs.close();
+                if (ps != null)
+                    ps.close();
+                if (conn != null)
+                    conn.close();
             } catch (Exception e) {
                 System.out.println("Error al cerrar recursos: " + e.getMessage());
             }
@@ -990,14 +1000,12 @@ public class Dao {
         return registros;
     }
 
-
-
     public static Registro obtenerRegistroAsistente(Integer idCurso, Integer idRegistro) {
         Registro registro = new Registro();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
-        
+
         try {
             conn = Conexion.getConnection();
             String query = "SELECT * FROM Registro WHERE Asistencia = 'true' AND IdCurso = ? AND IdRegistro=?";
@@ -1005,7 +1013,7 @@ public class Dao {
             ps.setInt(1, idCurso);
             ps.setInt(2, idRegistro);
             rs = ps.executeQuery();
-            
+
             while (rs.next()) {
                 registro.setNombre(rs.getString("Nombre"));
                 registro.setApellidos(rs.getString("Apellidos"));
@@ -1016,9 +1024,12 @@ public class Dao {
             ex.printStackTrace();
         } finally {
             try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (conn != null) conn.close();
+                if (rs != null)
+                    rs.close();
+                if (ps != null)
+                    ps.close();
+                if (conn != null)
+                    conn.close();
             } catch (Exception e) {
                 System.out.println("Error al cerrar recursos: " + e.getMessage());
             }
@@ -1064,5 +1075,3 @@ public class Dao {
     }
 
 }
-
-

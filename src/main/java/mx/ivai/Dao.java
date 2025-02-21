@@ -586,6 +586,10 @@ public class Dao {
 
         try {
             Integer cupoFinal = curso.getCupo() - diferencia;
+            if(cupoFinal < 0){
+                cupoFinal = 0;
+            }
+            
             String sql = "UPDATE Curso SET NombreCurso = ?, Fecha = ?, Hora = ?, Imparte = ?, Cupo = ?, EstatusCupo = ?, EstatusCurso = ?, "
                     + " Modalidad = ?, Direccion = ?, CorreoSeguimiento = ?, Tipo = ?, Curso = ?, LigaTeams = ?, ValorCurricular = ?"
                     + "WHERE IdCurso = ?";

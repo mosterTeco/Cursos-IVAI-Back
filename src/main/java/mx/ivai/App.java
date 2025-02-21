@@ -391,8 +391,6 @@ public class App {
 
             String body = request.body();
 
-            System.out.println("Datos recibidos en el backend: " + body);
-
             Gson gson = new Gson();
 
             Cursos curso = gson.fromJson(body, Cursos.class);
@@ -414,8 +412,6 @@ public class App {
             response.type("application/json");
 
             String body = request.body();
-
-            System.out.println("Datos recibidos en el backend: " + body);
 
             Gson gson = new Gson();
 
@@ -463,7 +459,6 @@ public class App {
             response.type("application/json");
 
             String body = request.body();
-            System.out.println("Datos recibidos en el backend: " + body);
 
             Gson gson = new Gson();
             TipoCurso tipoCurso = gson.fromJson(body, TipoCurso.class);

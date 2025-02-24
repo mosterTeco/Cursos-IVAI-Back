@@ -932,7 +932,7 @@ public class Dao {
 
         try {
             conn = c.getConnection();
-            String query = "SELECT CONCAT(Nombre, ' ', Apellidos) as Nombre, FROM Registro WHERE Asistencia = 'true' AND IdCurso = ?";
+            String query = "SELECT CONCAT(Nombre, ' ', Apellidos) as Nombre FROM Registro WHERE Asistencia = 'true' AND IdCurso = ?";
             ps = conn.prepareStatement(query);
             ps.setInt(1, idCurso); // Corregido el índice del parámetro
             rs = ps.executeQuery();
@@ -979,7 +979,6 @@ public class Dao {
                 registro.setNombre(rs.getString("Nombre"));
                 registro.setApellidos(rs.getString("Apellidos"));
                 registro.setCorreo(rs.getString("Correo"));
-                // Si tu clase Registro tiene más campos, asigna los valores correspondientes
                 registros.add(registro);
             }
         } catch (Exception ex) {

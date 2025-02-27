@@ -80,7 +80,7 @@ Rol VARCHAR (1) NULL,
 PRIMARY KEY (IdUsuario,Usuario)
 );
 
-INSERT INTO Usuario ( Usuario, Pass, Nombre, Rol) values ('admin','admin','Rafael Martinez', '1');
+INSERT INTO Usuario ( Usuario, Pass, Nombre, Rol) values ('admin','admin','Admin Admin', '1');
 
 insert into TIPOCURSO ( Tipo ) values ('Seleccionar Curso');
 insert into TIPOCURSO ( Tipo ) values ('Aviso de Privacidad');

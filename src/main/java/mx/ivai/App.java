@@ -52,27 +52,27 @@ public class App {
     private static byte[] agregarTextoAPNG(byte[] imagenBytes, String texto) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(imagenBytes);
         BufferedImage imagen = ImageIO.read(bais);
-    
+
         Graphics2D g2d = imagen.createGraphics();
         g2d.setFont(new Font("Arial", Font.BOLD, 55));
         g2d.setColor(Color.BLACK);
-    
+
         // Obtener las métricas de la fuente
         FontMetrics fm = g2d.getFontMetrics();
         int textWidth = fm.stringWidth(texto);
-    
+
         // Calcular la posición X centrada
         int x = (imagen.getWidth() - textWidth) / 2;
         int y = 540; // Posición Y fija
-    
+
         g2d.drawString(texto, x, y);
         g2d.dispose();
-    
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(imagen, "png", baos);
         return baos.toByteArray();
     }
-    
+
     public static byte[] inputStreamToByteArray(InputStream inputStream) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int bytesRead;
@@ -143,7 +143,7 @@ public class App {
 
         get("/obtenerAsistentes/:idCurso", (request, response) -> {
             response.type("application/json");
-        
+
             try {
                 int idCurso = Integer.parseInt(request.params("idCurso"));
                 List<String> asistentes = Dao.obtenerAsistentes(idCurso);
@@ -152,11 +152,11 @@ public class App {
                 response.status(400);
                 return new Gson().toJson("Error: idCurso debe ser un número válido.");
             } catch (Exception e) {
-                response.status(500); 
+                response.status(500);
                 return new Gson().toJson("Error interno en el servidor: " + e.getMessage());
             }
         });
-        
+
         get("/tiposs", (request, response) -> {
             response.type("application/json");
             ArrayList<String> tiposCurso = Dao.obtenerTiposCurso();
@@ -211,12 +211,15 @@ public class App {
 
                 Cursos curso = gson.fromJson(jsonObject.get("curso"), Cursos.class);
 
-                String constanciaBase64 = jsonObject.get("constancia").getAsString();
+                if (!jsonObject.get("constancia").isJsonNull()) {
+                    String constanciaBase64 = jsonObject.get("constancia").getAsString();
 
-                if (constanciaBase64 != null && !constanciaBase64.isEmpty()) {
-                    byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);
+                    if (constanciaBase64 != null && !constanciaBase64.isEmpty()) {
+                        byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);
 
-                    curso.setConstancia(constanciaBytes);
+                        curso.setConstancia(constanciaBytes);
+                        System.out.println(curso.getConstancia());
+                    }
                 }
 
                 String mensaje = Dao.registrarCurso(curso);
@@ -235,6 +238,10 @@ public class App {
         });
 
         get("/obtenerPdf/:idCurso", (request, response) -> {
+            try {
+
+            
+
             int idCurso = Integer.parseInt(request.params("idCurso"));
             List<String> asistentes = Dao.obtenerAsistentes(idCurso);
 
@@ -263,6 +270,9 @@ public class App {
 
             zos.close();
 
+
+        
+
             response.type("application/zip");
             response.header("Content-Disposition", "attachment; filename=\"constancias.zip\"");
 
@@ -271,88 +281,88 @@ public class App {
             os.flush();
             os.close();
 
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+
             return response.raw();
+            
         });
-
-
 
         get("/enviarConstancias/:idCurso", (request, response) -> {
             int idCurso = Integer.parseInt(request.params("idCurso"));
-        
+
             // Obtiene la información del curso
             Cursos curso = Dao.obtenerCurso(idCurso);
             if (curso == null) {
                 response.status(404);
                 return "Curso no encontrado";
             }
-        
+
             // Obtiene los registros de los asistentes (con su correo, nombre, etc.)
             List<Registro> registros = Dao.obtenerRegistrosAsistentes(idCurso);
             if (registros.isEmpty()) {
                 response.status(404);
                 return "No hay asistentes registrados para este curso.";
             }
-        
+
             for (Registro registro : registros) {
                 // Obtiene los bytes de la constancia (por ejemplo, una imagen base)
                 byte[] archivoBytes = Dao.obtenerConstancia(idCurso);
                 if (archivoBytes == null || archivoBytes.length == 0) {
                     continue;
                 }
-                
-                // Agrega el nombre del asistente sobre la imagen (puedes implementar esta función según tus necesidades)
+
+                // Agrega el nombre del asistente sobre la imagen (puedes implementar esta
+                // función según tus necesidades)
                 String nombreCompleto = registro.getNombre() + " " + registro.getApellidos();
                 archivoBytes = agregarTextoAPNG(archivoBytes, nombreCompleto);
-                
+
                 // Envía el correo con la constancia adjunta
                 MailConstancia.inicializarMail(registro, curso, archivoBytes);
             }
-        
+
             response.type("text/plain");
             return "Correos enviados exitosamente";
         });
 
-
-       
-
         post("/mandarConstanciaAsistente", (request, response) -> {
             response.type("application/json");
-        
+
             Gson gson = new Gson();
             JsonObject body = gson.fromJson(request.body(), JsonObject.class);
-            
+
             int idCurso = body.get("idCurso").getAsInt();
             int idRegistro = body.get("idRegistro").getAsInt();
-        
+
             // Obtiene la información del curso
             Cursos curso = Dao.obtenerCurso(idCurso);
             if (curso == null) {
                 response.status(404);
                 return "Curso no encontrado";
             }
-        
+
             // Obtiene los registros de los asistentes (con su correo, nombre, etc.)
-            Registro registro = Dao.obtenerRegistroAsistente(idCurso,idRegistro);
+            Registro registro = Dao.obtenerRegistroAsistente(idCurso, idRegistro);
             if (registro == null) {
                 response.status(404);
                 return "No hay asistentes registrados para este curso.";
             }
-        
-                // Obtiene los bytes de la constancia (por ejemplo, una imagen base)
-                byte[] archivoBytes = Dao.obtenerConstancia(idCurso);
-                
-                // Agrega el nombre del asistente sobre la imagen (puedes implementar esta función según tus necesidades)
-                String nombreCompleto = registro.getNombre() + " " + registro.getApellidos();
-                archivoBytes = agregarTextoAPNG(archivoBytes, nombreCompleto);
-                
-                // Envía el correo con la constancia adjunta
-                MailConstancia.inicializarMail(registro, curso, archivoBytes);
-            
+
+            // Obtiene los bytes de la constancia (por ejemplo, una imagen base)
+            byte[] archivoBytes = Dao.obtenerConstancia(idCurso);
+
+            // Agrega el nombre del asistente sobre la imagen (puedes implementar esta
+            // función según tus necesidades)
+            String nombreCompleto = registro.getNombre() + " " + registro.getApellidos();
+            archivoBytes = agregarTextoAPNG(archivoBytes, nombreCompleto);
+
+            // Envía el correo con la constancia adjunta
+            MailConstancia.inicializarMail(registro, curso, archivoBytes);
+
             response.type("text/plain");
             return "Correos enviados exitosamente";
         });
-
-        
 
         // Petición para obtener archivo excel de los regitros
         get("/obtenerExcelRegistros/:idCurso", (request, response) -> {
@@ -386,18 +396,46 @@ public class App {
 
         put("/actualizar", (request, response) -> {
             response.type("application/json");
-            String fecha = request.queryParams("Fecha");
-            System.out.println(fecha);
 
-            String body = request.body();
+            try {
 
-            Gson gson = new Gson();
+                String body = request.body();
+                JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
 
-            Cursos curso = gson.fromJson(body, Cursos.class);
+                Cursos curso = gson.fromJson(jsonObject.get("curso"), Cursos.class);
 
-            String resultado = Dao.editarCurso(curso);
+                String constanciaBase64 = jsonObject.get("constancia").getAsString();
 
-            return gson.toJson(Collections.singletonMap("mensaje", resultado));
+                if (constanciaBase64 != null && !constanciaBase64.isEmpty()) {
+                    byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);
+
+                    curso.setConstancia(constanciaBytes);
+                    System.out.println(curso.getConstancia());
+                }
+
+                String mensaje = Dao.editarCurso(curso);
+
+                Map<String, String> respuesta = new HashMap<>();
+                respuesta.put("mensaje", mensaje);
+                return gson.toJson(respuesta);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.status(500);
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Error interno: " + e.getMessage());
+                return gson.toJson(errorResponse);
+            }
+
+            // String body = request.body();
+
+            // Gson gson = new Gson();
+
+            // Cursos curso = gson.fromJson(body, Cursos.class);
+
+            // String resultado = Dao.editarCurso(curso);
+
+            // return gson.toJson(Collections.singletonMap("mensaje", resultado));
         });
 
         post("/registrarse", (request, response) -> {
@@ -489,7 +527,6 @@ public class App {
             return jsonEstados;
         });
 
-
         delete("/eliminarRegistro", (request, response) -> {
             response.type("application/json");
             String payload = request.body();
@@ -497,8 +534,6 @@ public class App {
             String respuesta = Dao.eliminarRegistro(registro);
             return respuesta;
         });
-
-
 
     }
 }

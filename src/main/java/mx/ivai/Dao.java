@@ -448,6 +448,7 @@ public class Dao {
                 curso.setCurso(rs.getString("Curso"));
                 curso.setLigaTeams(rs.getString("LigaTeams"));
                 curso.setValorCurricular(rs.getString("ValorCurricular"));
+                curso.setConstancia(rs.getBytes("Constancia"));
                 cursos.add(curso);
             }
 
@@ -612,7 +613,7 @@ public class Dao {
             }
 
             String sql = "UPDATE Curso SET NombreCurso = ?, Fecha = ?, Hora = ?, Imparte = ?, Cupo = ?, EstatusCupo = ?, EstatusCurso = ?, "
-                    + " Modalidad = ?, Direccion = ?, CorreoSeguimiento = ?, Tipo = ?, Curso = ?, LigaTeams = ?, ValorCurricular = ?"
+                    + " Modalidad = ?, Direccion = ?, CorreoSeguimiento = ?, Tipo = ?, Curso = ?, LigaTeams = ?, ValorCurricular = ?, Constancia = ?"
                     + "WHERE IdCurso = ?";
 
             stm = conn.prepareStatement(sql);
@@ -631,7 +632,8 @@ public class Dao {
             stm.setString(12, curso.getCurso());
             stm.setString(13, curso.getLigaTeams());
             stm.setString(14, curso.getValorCurricular());
-            stm.setInt(15, curso.getIdCurso());
+            stm.setBytes(15, curso.getConstancia());
+            stm.setInt(16, curso.getIdCurso());
 
             if (stm.executeUpdate() > 0) {
                 msj = "Curso actualizado con éxito";

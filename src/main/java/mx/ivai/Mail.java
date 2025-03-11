@@ -51,7 +51,7 @@ public class Mail {
 
             if (curso.getModalidad().equals("Virtual")) {
                 htmlContent = "<h2>Apreciado(a) " + registro.getNombre() + " " + registro.getApellidos() + "</h2>"
-                        + "<p>El instituto Veracruzano de Acceso a la Información y Protección de Datos Personales, a través de la "
+                        + "<p>El instituto Veracruzano de Acceso a la Informaci&oacute;n y Protección de Datos Personales, a través de la "
                         + "Dirección de Capacitación y Vinculación Ciudadana, le envía el enlace de la capacitación virtual denominada "
                         + "<strong>" + curso.getNombreCurso() + "</strong>, a realizarse el día <strong>"
                         + curso.getFecha() + "</strong> a las <strong>"
@@ -76,8 +76,6 @@ public class Mail {
             message.setContent(htmlContent, "text/html; charset=UTF-8");
             message.setHeader("Content-Type", "text/html; charset=UTF-8");
             message.setHeader("Content-Transfer-Encoding", "8bit");
-
-            message.setContent(htmlContent, "text/html");
 
             System.out.println("Enviando");
             Transport.send(message);

@@ -1,6 +1,8 @@
 package mx.ivai;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -239,53 +241,48 @@ public class App {
         get("/obtenerPdf/:idCurso", (request, response) -> {
             try {
 
-            
+                int idCurso = Integer.parseInt(request.params("idCurso"));
+                List<String> asistentes = Dao.obtenerAsistentes(idCurso);
 
-            int idCurso = Integer.parseInt(request.params("idCurso"));
-            List<String> asistentes = Dao.obtenerAsistentes(idCurso);
-
-            if (asistentes.isEmpty()) {
-                response.status(404);
-                return "No hay asistentes registrados para este curso.";
-            }
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ZipOutputStream zos = new ZipOutputStream(baos);
-
-            for (String asistente : asistentes) {
-                byte[] archivoBytes = Dao.obtenerConstancia(idCurso);
-
-                if (archivoBytes == null || archivoBytes.length == 0) {
-                    continue;
+                if (asistentes.isEmpty()) {
+                    response.status(404);
+                    return "No hay asistentes registrados para este curso.";
                 }
 
-                archivoBytes = agregarTextoAPNG(archivoBytes, asistente);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ZipOutputStream zos = new ZipOutputStream(baos);
 
-                ZipEntry entry = new ZipEntry(asistente.replace(" ", "_") + ".png");
-                zos.putNextEntry(entry);
-                zos.write(archivoBytes);
-                zos.closeEntry();
+                for (String asistente : asistentes) {
+                    byte[] archivoBytes = Dao.obtenerConstancia(idCurso);
+
+                    if (archivoBytes == null || archivoBytes.length == 0) {
+                        continue;
+                    }
+
+                    archivoBytes = agregarTextoAPNG(archivoBytes, asistente);
+
+                    ZipEntry entry = new ZipEntry(asistente.replace(" ", "_") + ".png");
+                    zos.putNextEntry(entry);
+                    zos.write(archivoBytes);
+                    zos.closeEntry();
+                }
+
+                zos.close();
+
+                response.type("application/zip");
+                response.header("Content-Disposition", "attachment; filename=\"constancias.zip\"");
+
+                OutputStream os = response.raw().getOutputStream();
+                os.write(baos.toByteArray());
+                os.flush();
+                os.close();
+
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
 
-            zos.close();
-
-
-        
-
-            response.type("application/zip");
-            response.header("Content-Disposition", "attachment; filename=\"constancias.zip\"");
-
-            OutputStream os = response.raw().getOutputStream();
-            os.write(baos.toByteArray());
-            os.flush();
-            os.close();
-
-        } catch (Exception e){
-            System.out.println(e.getMessage());
-        }
-
             return response.raw();
-            
+
         });
 
         get("/enviarConstancias/:idCurso", (request, response) -> {
@@ -397,20 +394,24 @@ public class App {
             response.type("application/json");
 
             try {
-
                 String body = request.body();
                 JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
 
                 Cursos curso = gson.fromJson(jsonObject.get("curso"), Cursos.class);
-                if(!jsonObject.get("constancia").isJsonNull()) {
-                    String constanciaBase64 = jsonObject.get("constancia").getAsString();
-                    if (constanciaBase64 != null && !constanciaBase64.isEmpty()) {
-                        byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);
-    
-                        curso.setConstancia(constanciaBytes);
-                    }
-                }
+                if (jsonObject.get("constancia") == null) {
+                    curso.setConstancia(null);
+                } else if (!jsonObject.get("constancia").isJsonNull()) {
+                        String constanciaBase64 = jsonObject.get("constancia").getAsString();
 
+                        if (!constanciaBase64.isEmpty()) {
+                            try {
+                                byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);
+                                curso.setConstancia(constanciaBytes);
+                            } catch (IllegalArgumentException e) {
+                                System.err.println("Error al decodificar Base64: " + e.getMessage());
+                            }
+                        }
+                }
 
                 String mensaje = Dao.editarCurso(curso);
 
@@ -425,16 +426,6 @@ public class App {
                 errorResponse.put("error", "Error interno: " + e.getMessage());
                 return gson.toJson(errorResponse);
             }
-
-            // String body = request.body();
-
-            // Gson gson = new Gson();
-
-            // Cursos curso = gson.fromJson(body, Cursos.class);
-
-            // String resultado = Dao.editarCurso(curso);
-
-            // return gson.toJson(Collections.singletonMap("mensaje", resultado));
         });
 
         post("/registrarse", (request, response) -> {

@@ -402,7 +402,7 @@ public class App {
                 JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
 
                 Cursos curso = gson.fromJson(jsonObject.get("curso"), Cursos.class);
-                if(jsonObject.get("constancia").isJsonNull()) {
+                if(!jsonObject.get("constancia").isJsonNull()) {
                     String constanciaBase64 = jsonObject.get("constancia").getAsString();
                     if (constanciaBase64 != null && !constanciaBase64.isEmpty()) {
                         byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);

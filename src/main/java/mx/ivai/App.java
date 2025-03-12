@@ -218,7 +218,6 @@ public class App {
                         byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);
 
                         curso.setConstancia(constanciaBytes);
-                        System.out.println(curso.getConstancia());
                     }
                 }
 
@@ -403,15 +402,15 @@ public class App {
                 JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
 
                 Cursos curso = gson.fromJson(jsonObject.get("curso"), Cursos.class);
-
-                String constanciaBase64 = jsonObject.get("constancia").getAsString();
-
-                if (constanciaBase64 != null && !constanciaBase64.isEmpty()) {
-                    byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);
-
-                    curso.setConstancia(constanciaBytes);
-                    System.out.println(curso.getConstancia());
+                if(jsonObject.get("constancia").isJsonNull()) {
+                    String constanciaBase64 = jsonObject.get("constancia").getAsString();
+                    if (constanciaBase64 != null && !constanciaBase64.isEmpty()) {
+                        byte[] constanciaBytes = Base64.getDecoder().decode(constanciaBase64);
+    
+                        curso.setConstancia(constanciaBytes);
+                    }
                 }
+
 
                 String mensaje = Dao.editarCurso(curso);
 

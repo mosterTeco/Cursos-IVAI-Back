@@ -101,8 +101,11 @@ public class Dao {
     // !METODO PARA AGREGAR NUEVOS USUARIOS A LA TABLA DE REGISTRO
     public static String crearRegistro(Registro reg) {
         PreparedStatement stm = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
         Connection conn = null;
         String msj = "";
+        boolean correoExistente = false;
         LocalDateTime fecha = LocalDateTime.now();
         DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         String fechaFormateada = fecha.format(formato);
@@ -112,27 +115,36 @@ public class Dao {
         Cursos curso = obtenerCurso(reg.getIdCurso());
         if (curso.getEstatusCupo() > 0) {
             try {
-                String sql = "INSERT INTO Registro ( Nombre, Apellidos, SO, Telefono, Correo, IdCurso, Procedencia, GradoEstudios, OrdenGobierno, Area, Cargo, Genero, Estado, Fecha, InfoEventos, Interprete) "
-                        +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                stm = conn.prepareStatement(sql);
-                stm.setString(1, reg.getNombre());
-                stm.setString(2, reg.getApellidos());
-                stm.setString(3, reg.getSo());
-                stm.setString(4, reg.getTelefono());
-                stm.setString(5, reg.getCorreo());
-                stm.setInt(6, reg.getIdCurso());
-                stm.setString(7, reg.getLugarDeProcedencia());
-                stm.setString(8, reg.getGradoDeEstudios());
-                stm.setString(9, reg.getOrden());
-                stm.setString(10, reg.getAreaAdquisicion());
-                stm.setString(11, reg.getCargoPublico());
-                stm.setString(12, reg.getGenero());
-                stm.setString(13, reg.getEstado());
-                stm.setString(14, fechaFormateada);
-                stm.setString(15, reg.getRecibirInformacion());
-                stm.setString(16, reg.getInterprete());
-
+                String peticionCorreo = "SELECT Correo FROM Registro WHERE IdCurso = " + reg.getIdCurso() + " AND Correo = '" + reg.getCorreo() + "'";
+                ps = conn.prepareStatement(peticionCorreo);
+                rs = ps.executeQuery();
+                if (rs.next()) {
+                    msj = "Correo Existente";
+                    correoExistente = true;
+                }
+                ps.close();
+                if (correoExistente == false) {
+                    String sql = "INSERT INTO Registro ( Nombre, Apellidos, SO, Telefono, Correo, IdCurso, Procedencia, GradoEstudios, OrdenGobierno, Area, Cargo, Genero, Estado, Fecha, InfoEventos, Interprete) "
+                            +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    stm = conn.prepareStatement(sql);
+                    stm.setString(1, reg.getNombre());
+                    stm.setString(2, reg.getApellidos());
+                    stm.setString(3, reg.getSo());
+                    stm.setString(4, reg.getTelefono());
+                    stm.setString(5, reg.getCorreo());
+                    stm.setInt(6, reg.getIdCurso());
+                    stm.setString(7, reg.getLugarDeProcedencia());
+                    stm.setString(8, reg.getGradoDeEstudios());
+                    stm.setString(9, reg.getOrden());
+                    stm.setString(10, reg.getAreaAdquisicion());
+                    stm.setString(11, reg.getCargoPublico());
+                    stm.setString(12, reg.getGenero());
+                    stm.setString(13, reg.getEstado());
+                    stm.setString(14, fechaFormateada);
+                    stm.setString(15, reg.getRecibirInformacion());
+                    stm.setString(16, reg.getInterprete());
+                }
                 if (stm.executeUpdate() > 0) {
                     msj = "Registro Correcto";
                     reducirCupo(reg.getIdCurso());
@@ -614,7 +626,7 @@ public class Dao {
 
             String sql = "UPDATE Curso SET NombreCurso = ?, Fecha = ?, Hora = ?, Imparte = ?, Cupo = ?, EstatusCupo = ?, EstatusCurso = ?, "
                     + " Modalidad = ?, Direccion = ?, CorreoSeguimiento = ?, Tipo = ?, Curso = ?, LigaTeams = ?, ValorCurricular = ?, Constancia = ?"
-                    + "WHERE IdCurso = ?";
+                    + " WHERE IdCurso = ?";
 
             stm = conn.prepareStatement(sql);
 
